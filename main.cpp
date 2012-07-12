@@ -198,7 +198,7 @@ int main(int argc, char **argv)
 			std::cout << ".";
 		if(tmp_ilosc_polozonych_klockow>20)
 		{
-			std::cout << "-w-";//"Wykryto stagnacje - zmieniam";// << std::endl;
+			std::cout << "-w-";//"Wykryto stagnacje - zmieniam";
 			++wykryto_stagnacje;
 			if(pmut < 0.05)
 				pmut += 0.01;
