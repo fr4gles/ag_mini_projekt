@@ -73,12 +73,12 @@ public:
 		setHalfPoint();
 	}
 
-	void setHalfPoint()
+	void setHalfPoint() const
 	{
 		half_w	= w_k/2.0;
 	}
 
-	void rotate()
+	void rotate() const 
 	{
 		int tmp = 0;
 		tmp = this->h_k;
@@ -110,14 +110,13 @@ public:
 		x_k = x;
 	}
 
-	int		i_k,
-			w_k,
-			h_k;
+	mutable int		i_k,
+					w_k,
+					h_k;
 	mutable float	x_k, 
-					mid_point;
-	bool	turned;
-	float	half_w;
-			
+					mid_point,
+					half_w;
+	mutable bool	turned;
 };
 
 std::ostream& operator<<(std::ostream &out, const Block& block)
@@ -255,12 +254,26 @@ float objective(GAGenome & c)
 			y_k,
 			kalibracja = 0.05,
 			kara_x = random_float(0.0,0.7),
-			kara_y = kara_x;//random_float(0.0,0.7);
+			kara_y = random_float(0.0,0.7),
+			rzut_moneta = 0.0;
 
-	int		przewrocil_sie = 0;
+	int		przewrocil_sie = 0,
+			rotated_blocks_good = 0,
+			rotated_blocks_bad	= 0;
 	
 	for(unsigned int i=0; i<amount_of_blocks;++i)
 	{
+		///obrót klocków - 50% szans na obrót
+		rzut_moneta = random_float(0.0,1.0);
+
+		if(rzut_moneta >= 0.5)
+			genome.gene(i).rotate();
+
+		if(genome.gene(i).w_k > genome.gene(i).h_k)
+			++rotated_blocks_good;
+		else
+			++rotated_blocks_bad;
+		//////////////////////////////////////////////////////////////////////////
 		switch(i)
 		{
 			case 0: 
@@ -302,7 +315,7 @@ float objective(GAGenome & c)
 			x2 = MAX(genome.gene(i).mid_point + genome.gene(i).half_w,x2); 
 
 			/*std::cout << x1 << "    " << x2 << "   " << x2+fabs(x1) << std::endl;*/
-
+			//////////////////////////////////////////////////////////////////////////
 			++n;
 			punkt_srodka_ciezkosci += genome.gene(j).mid_point;
 			srodek_ciezkosci = (punkt_srodka_ciezkosci) / n;
@@ -324,14 +337,16 @@ float objective(GAGenome & c)
 			}
 		}
 	}
-
+	//////////////////////////////////////////////////////////////////////////
 	przewrocil_sie_global = MAX(przewrocil_sie,przewrocil_sie_global);
 	przewrocil_sie_global_w_generacji = MAX(przewrocil_sie,przewrocil_sie_global_w_generacji);
 
 	if(przewrocil_sie==0)
-		result = 8.0*amount_of_blocks + 0.05*(x2+fabs(x1));
+		result = 8.0*amount_of_blocks + 0.05*(x2+fabs(x1)) + (rotated_blocks_good-rotated_blocks_bad);
 	else
-		result = 40.0*(przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/) + 0.05*(x2+fabs(x1)*((fabs(x2+fabs(x1) - max_width))/max_width));
+		result =	40.0*(przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/) 
+				+	0.05*(x2+fabs(x1)*((fabs(x2+fabs(x1) - max_width))/max_width))
+				+ 	(rotated_blocks_good-rotated_blocks_bad);
 
 	//std::cout << x1 << "    " << x2 << "   " << x2+fabs(x1) << "    " << result <<std::endl;
 
@@ -345,13 +360,11 @@ float count_max_width(const GA1DArrayGenome<Block>& best)
 
 	for(unsigned i=0; i<amount_of_blocks; ++i)
 	{
-		if(best.gene(i).x_k !=(float)INT_MAX) 
-		{
-			x1 = MIN(best.gene(i).mid_point - best.gene(i).half_w,x1);
-			x2 = MAX(best.gene(i).mid_point + best.gene(i).half_w,x2); 
-		}
-		else 
+		if(best.gene(i).x_k ==(float)INT_MAX) 
 			break;
+
+		x1 = MIN(best.gene(i).mid_point - best.gene(i).half_w,x1);
+		x2 = MAX(best.gene(i).mid_point + best.gene(i).half_w,x2); 
 	}
 
 	return x2+fabs(x1);
@@ -369,8 +382,8 @@ void init_my_population(GAGenome &ga)
 	{
 		my_gene[i].cloneBlock(blocks_from_file[i]);
 
-		if ( /*kolejnosc!=1 &&*/ my_gene[i].w_k < my_gene[i].h_k )
-			my_gene[i].rotate();
+		//if ( /*kolejnosc!=1 &&*/ my_gene[i].w_k < my_gene[i].h_k )
+		//	my_gene[i].rotate();
 
 		if(kolejnosc)
 			max_width =  MAX(max_width,my_gene[i].w_k);
