@@ -14,7 +14,7 @@
 class Block;
 
 int popsize							= 500;//500;
-int ngen							= 2000;//2000;
+int ngen							= 1000;//2000;
 float pmut							= 0.05;
 float pcross						= 0.65;
 
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 {
 	std::time_t start = clock();
 	srand((unsigned)time(0));
-	generate_blocks_file("plik.txt", 30);
+	//generate_blocks_file("plik.txt", 300);
 	read_blocks_file("plik.txt");
 
 	GA1DArrayGenome<Block> genome(amount_of_blocks,objective);
@@ -189,19 +189,12 @@ int main(int argc, char **argv)
 		ga.maximize();
 		ga.step();
 
-		//for(unsigned int i=0;i<ga.population().size();++i)
-		//{
-		//	GA1DArrayGenome<Block> &oponent = (GA1DArrayGenome<Block> &)(ga.population().individual(i));
-		//	oponent.evaluate(gaTrue);
-		//}
-
 		std::cout << ktora_gen << " :   " << przewrocil_sie_global_w_generacji << "  :  " << przewrocil_sie_global << "      \r" ;
 		std::cout << "\r";
 		if(ga.generation() % ngen/60 == 0)
 			std::cout << ".";
 		if(tmp_ilosc_polozonych_klockow>20)
 		{
-			//std::cout << "-w-";//"Wykryto stagnacje - zmieniam";
 			++wykryto_stagnacje;
 			if(pmut < 0.09)
 				pmut += 0.01;
@@ -219,7 +212,7 @@ int main(int argc, char **argv)
 			tmp_ilosc_polozonych_klockow = 0;
 		}
 
-		if(wykryto_stagnacje > 5)
+		if(wykryto_stagnacje > 10)
 		{
 			pmut = 0.0;
 			pcross = 0.0;
@@ -228,6 +221,9 @@ int main(int argc, char **argv)
 			wykryto_stagnacje = 0;
 		}
 		
+		//std::time_t tmp_stop = clock();
+		//if( ((float)(tmp_stop-start)/CLOCKS_PER_SEC) )
+
 		przewrocil_sie_global_w_generacji = 0;
 		ktora_gen++;
 	}
@@ -297,8 +293,7 @@ float objective(GAGenome & c)
 
 				/// wyznaczanie wspolrzedneych srodkowego punktu
 				y_k = genome.gene(i).w_k - ( (-1.0)*(genome.gene(i).x_k) + genome.gene(i-1).w_k );
-				genome.gene(i).mid_point = genome.gene(i-1).mid_point + ((genome.gene(i).x_k + y_k)/2.0);
-				
+				genome.gene(i).mid_point = genome.gene(i-1).mid_point + ((genome.gene(i).x_k + y_k)/2.0);	
 			break;
 		}
 
@@ -311,7 +306,7 @@ float objective(GAGenome & c)
 	{
 		if(przewrocil_sie)
 			break;
-		n=0; // wazny !!!!!!!!!!!!!!!!!!!!!!!!!!! BLAD !!!!!!!!!!!!!!!!!!!!!!!!!!!
+		n=0; 
 		srodek_ciezkosci = 0.0;
 		punkt_srodka_ciezkosci = 0.0;
 
@@ -327,7 +322,6 @@ float objective(GAGenome & c)
 						kara -= (amount_of_blocks-i);
 			break;
 		}
-
 
 		for (int j = i; j>0;--j)
 		{
@@ -370,14 +364,19 @@ float objective(GAGenome & c)
 	if(przewrocil_sie==0)
 		przewrocil_sie = amount_of_blocks;
 
-	result	=	50.5*przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/
-			+	5.9*x2+fabs(x1)/**((fabs(x2+fabs(x1) - local_max_width))/local_max_width))*/;
+	float wspolczynnik = 0.5;
+
+	if(amount_of_blocks<100)
+		wspolczynnik = 8.0;
+
+	result	=	70.5*przewrocil_sie
+			+	wspolczynnik*(x2+fabs(x1));
 
 	if(amount_of_blocks > 50)
 	{
-		result	+= 	5.0*rotated_blocks_good
-				-	10.0*rotated_blocks_bad
-				+	kara;
+		result	+= 	rotated_blocks_good
+				-	2.0*rotated_blocks_bad
+				+	0.5*kara;
 	}
 
 	//std::cout << x1 << "    " << x2 << "   " << x2+fabs(x1) << "    " << result <<std::endl;
@@ -413,12 +412,6 @@ void init_my_population(GAGenome &ga)
 	for(unsigned int i=0;i<amount_of_blocks;++i)
 	{
 		my_gene[i].cloneBlock(blocks_from_file[i]);
-
-		//if ( /*kolejnosc!=1 &&*/ my_gene[i].w_k < my_gene[i].h_k )
-		//	my_gene[i].rotate();
-
-		//if(kolejnosc)
-		//	max_width =  MAX(max_width,my_gene[i].w_k);
 	}
 	
 	kolejnosc++;
@@ -467,15 +460,7 @@ void write_blocks_file(const std::string &name, const GA1DArrayGenome<Block>& da
 	{
 		file << data.gene(j).i_k << "\t" << data.gene(j).turned << "\t" << data.gene(j).x_k << std::endl;
 	}
-	//FILE *file;
-	//file = fopen(name.c_str(),"w");
-	//if(file==NULL)	{ printf("Nie udalo sie otworzyc pliku wyjsciowego. ABORT\n\n"); exit(-1); }
 
-	//for(unsigned j=0;j<amount_of_blocks;++j)
-	//{
-	//	fprintf(file,"%d\t%f\t%c\n",data.gene(j).i_k,data.gene(j).x_k,(data.gene(j).turned==true)?'1':'0');
-	//}
 	file.close();
-	//fclose(file);
 }
 
