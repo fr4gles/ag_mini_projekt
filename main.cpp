@@ -313,32 +313,47 @@ int main(int argc, char **argv)
 	return 0;
 }
 
+//////////////////////////////////////////////////////////////////////////
+/////////////////////// definicje  funkcji ///////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+/// funkcja dostosowania - opis w ciele funckji
 float objective(GAGenome & c)
 {
 	GA1DArrayGenome<Block> & genome = (GA1DArrayGenome<Block> &)c;
 
-	float	result = 0.0,
-			punkt_srodka_ciezkosci = 0.0,
-			srodek_ciezkosci = 0.0,
-			max_prawe_wychylenie = 0.0,
-			x1 = 0.0,
-			x2 = 0.0,
-			y_k,
-			kara = 0.0,
-			kara_x = random_float(0.0,0.5),
-			kara_y = random_float(0.0,0.5),
-			rzut_moneta = 0.0;
+//////////////////////////////////////////////////////////////////////////
+	/// blok deklaracji oraz definicji zmiennych
+	float	result = 0.0,						/// wynik zwracany przed funkcje objective
+			punkt_srodka_ciezkosci = 0.0,		/// punkt srodka ciezkosci i-1 klockow
+			srodek_ciezkosci = 0.0,				/// punkt srodka ciezkosci i klockow
+			max_prawe_wychylenie = 0.0,			/// punkt krytyczny, za który nie moze wyjsc punkt srodkowy kladzionego klocka
+			x1 = 0.0,							/// maksymalne lewe wychylenie wiezy
+			x2 = 0.0,							/// maksymalne prawe wychylenie wiezy
+			y_k,								/// zmienna analogiczna do x_k, okresla wychylenie klocka wzgledem prawej krawedzi poprzednika
+			kara = 0.0,							/// zmienna odpowiedzialna za przechowywanie kary za zle ulozone klocki ( gdy szerokosc < wykososc )
+			kara_x = random_float(0.0,0.5),		/// zmienna radomowa, pozwala zawezic przedzial dlugosci x_k z lewej strony
+			kara_y = random_float(0.0,0.5),		/// zmienna radomowa, pozwala zawezic przedzial dlugosci x_k z prawej strony
+			rzut_moneta = 0.0;					/// zmienna losowa, imitujaca rzut moneta
 
-	int		przewrocil_sie = 0,
-			rotated_blocks_good = 0,
-			rotated_blocks_bad	= 0,
-			local_max_width = 0;
-	
+	int		przewrocil_sie = 0,					/// liczba klockow ktore algorytm zdolal ulozyc
+			rotated_blocks_good = 0,			/// ilosc dobrze obroconych klockow
+			rotated_blocks_bad	= 0,			/// ilosc zle obroconcyh klockow
+			local_max_width = 0;				/// szerokosc najszerszego klocka w wiezy
+//////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////
+	/// wstepne losowanie parametow
+	/// ustwienie wychylenie x_k
+	/// obliczenie local_max_width
 	for(unsigned int i=0; i<amount_of_blocks;++i)
 	{
+	
+	//////////////////////////////////////////////////////////////////////////
 		///obrót klocków - 50% szans na obrót
+		/// ustawienie rotated_blocks_bad oraz rotated_blocks_good
 		rzut_moneta = random_float(0.0,1.0);
-
 		if(rzut_moneta >= 0.5)
 		{
 			//if(genome.gene(i).w_k < genome.gene(i).h_k)
@@ -349,7 +364,12 @@ float objective(GAGenome & c)
 			++rotated_blocks_good;
 		else
 			++rotated_blocks_bad;
-		//////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+
+
+	//////////////////////////////////////////////////////////////////////////
+		/// wyliczenie oraz ustawienie x_k
+		/// wlasciwe ukladanie klockow
 		switch(i)
 		{
 			case 0: 
@@ -368,20 +388,31 @@ float objective(GAGenome & c)
 				genome.gene(i).mid_point = genome.gene(i-1).mid_point + ((genome.gene(i).x_k + y_k)/2.0);	
 			break;
 		}
+	//////////////////////////////////////////////////////////////////////////
 
-		if(kolejnosc)
-			local_max_width =  MAX(local_max_width,genome.gene(i).w_k);
+		/// maksymalna szerokosc klocka w wiezy
+		local_max_width =  MAX(local_max_width,genome.gene(i).w_k);
 	}
+//////////////////////////////////////////////////////////////////////////
 
+
+//////////////////////////////////////////////////////////////////////////
+	/// sprawdzenie czy wieza sie przewroci
+	/// obliczenie klocka na ktorym wieza sie przewroci
+	/// obliczenie szerokosci wiezy
 	int n=0;
 	for(int i = 1;i<amount_of_blocks;++i)
 	{
-		if(przewrocil_sie)
-			break;
+		if(przewrocil_sie) /// jesli sie przewroci to przerwij
+			break; 
+
+		/// zerowanie zmiennych do nastepnego przebiegu petli
 		n=0; 
 		srodek_ciezkosci = 0.0;
 		punkt_srodka_ciezkosci = 0.0;
 
+	//////////////////////////////////////////////////////////////////////////
+		/// ustawienie kary za zle ulozenie
 		switch(i)
 		{
 		case 0 :	if(genome.gene(i).w_k<genome.gene(i).h_k)
@@ -394,22 +425,26 @@ float objective(GAGenome & c)
 						kara -= (amount_of_blocks-i);
 			break;
 		}
+	//////////////////////////////////////////////////////////////////////////
 
+
+	//////////////////////////////////////////////////////////////////////////
+		/// petla sprawdzajaca czy klocek sie przewrocil
 		for (int j = i; j>0;--j)
 		{
-			if(przewrocil_sie)
+			if(przewrocil_sie) /// jesli sie przewroci to przerwij
 				break;
 
-			/// obliczanie szerokosci wiezy
+			/// obliczanie szerokosci obecnej wiezy
 			x1 = MIN(genome.gene(i).mid_point - genome.gene(i).half_w,x1);
 			x2 = MAX(genome.gene(i).mid_point + genome.gene(i).half_w,x2); 
 
-			/*std::cout << x1 << "    " << x2 << "   " << x2+fabs(x1) << std::endl;*/
-			//////////////////////////////////////////////////////////////////////////
 			++n;
 			punkt_srodka_ciezkosci += genome.gene(j).mid_point;
 			srodek_ciezkosci = (punkt_srodka_ciezkosci) / n;
 
+		//////////////////////////////////////////////////////////////////////////
+			/// wlasciwe sprawdzenie czy wieza sie przewroci
 			switch(przewrocil_sie)
 			{
 			case 0:
@@ -425,17 +460,26 @@ float objective(GAGenome & c)
 				}
 				break;
 			}
+		//////////////////////////////////////////////////////////////////////////
 		}
-	}
 	//////////////////////////////////////////////////////////////////////////
+	}
+//////////////////////////////////////////////////////////////////////////
+
+
+	/// obliczenie maksymalnych wiez globalnych oraz w danej generacji
 	przewrocil_sie_global = MAX(przewrocil_sie,przewrocil_sie_global);
 	przewrocil_sie_global_w_generacji = MAX(przewrocil_sie,przewrocil_sie_global_w_generacji);
 
 	
-	//	result = 10.0*amount_of_blocks + 0.5*(x2+fabs(x1)) + 2.0*(rotated_blocks_good-rotated_blocks_bad) +	0.01*kara;
-	if(przewrocil_sie==0)
+	
+	if(przewrocil_sie==0) /// ustawienie dobrej wartosci w przypadku ulozenia calej wiezy
 		przewrocil_sie = amount_of_blocks;
 
+
+//////////////////////////////////////////////////////////////////////////
+	/// obliczanie zmiennej result - wyniku zwracanego przez objective
+	/// - zastosowanie odpowiednich, eksperymentalnie dobranych wspó³czynników
 	float wspolczynnik = 0.5;
 
 	if(amount_of_blocks<100)
@@ -450,8 +494,7 @@ float objective(GAGenome & c)
 				-	2.0*rotated_blocks_bad
 				+	0.5*kara;
 	}
-
-	//std::cout << x1 << "    " << x2 << "   " << x2+fabs(x1) << "    " << result <<std::endl;
+//////////////////////////////////////////////////////////////////////////
 
 	return result;
 }
@@ -535,4 +578,3 @@ void write_blocks_file(const std::string &name, const GA1DArrayGenome<Block>& da
 
 	file.close();
 }
-
