@@ -138,6 +138,10 @@ std::ostream& operator<<(std::ostream &out, const Block& block)
 	return (out << block.i_k);
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+/////////////////////// deklaracje funkcji ///////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 /// funkcja dostosowania - dalszy opis w ciele funkcji
 float objective(GAGenome &);
 
@@ -165,8 +169,8 @@ bool sortuj_dobrze (const Block &i,const Block &j) { return (i.w_k>j.w_k); }
 
 /// funkcja obliczajaca szerokosc najlepszego osobnika
 /// - na potrzeby testow
-float count_max_width(const GA1DArrayGenome<Block>& );
-
+float maksymalna_szerokosc_osobnika(const GA1DArrayGenome<Block>& );
+//////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 /////////////////////////// main /////////////////////////////////////////
@@ -180,14 +184,24 @@ int main(int argc, char **argv)
 
 	read_blocks_file("plik.txt");
 
-	GA1DArrayGenome<Block> genome(amount_of_blocks,objective);
+//////////////////////////////////////////////////////////////////////////
+	/// osobnik
+	/// -  kazdy osobnik sklada sie z wczytanej ilosci klockow
+	/// - jest inicjalizowany losowym ulozeniem klockow
+	///		- krzyzowanie	- OrderCrossOver
+	///		- mutator		- SwapMutator
+	GA1DArrayGenome<Block> genome(amount_of_blocks,objective);	
 	genome.initializer(init_my_population);
 	genome.crossover(GA1DArrayGenome<Block>::OrderCrossover);
 	genome.mutator(GA1DArrayGenome<Block>::SwapMutator);
+//////////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////////
+	/// algorytm SGA - simple genetic algorithm
+	/// metoda selekcji - RANKSELECTOR
+	/// prawdopodobienstwa mutacji oraz krzyzowania zgodnie z ustawieniami
+	/// zastosowano skalowanie wynikow funkcji objective
 	GASimpleGA ga(genome);
-	//GATournamentSelector select;
-	//GARouletteWheelSelector select;
 	GARankSelector select;
 
 	ga.selector(select);
@@ -200,33 +214,51 @@ int main(int argc, char **argv)
 	GASigmaTruncationScaling scaling;
 	ga.scaling(scaling);
 
-	//ga.scoreFilename("wyniki.dat");
 	ga.scoreFrequency(1);
-	ga.flushFrequency(50);
+	ga.flushFrequency(100);
 	ga.initialize((unsigned)time(0));
-	//ga.evolve(time(NULL));
+//////////////////////////////////////////////////////////////////////////
+	
+	int tmp_ilosc_powtorzen = 0;			/// zmienna tmp, okresla ilosc pwotorzen maksymalnej ilosci polozonych klockow klockow
+	int tmp_przewrocil_sie_global = 0;		/// zmienna tmp, okresla ilosc polozonych klockow w poprzedniej generacji
+	int wykryto_stagnacje = 0;				/// zmienna okreslajaca stopien stagnacji - nic sie nie zmienia, nie mozna ulozyc wiecej klockow
+	int ktora_gen = 0;						/// zmienna okresla numer generacji
 
-	int tmp_ilosc_polozonych_klockow = 0;
-	int tmp_przewrocil_sie_global = 0;
-	int wykryto_stagnacje = 0;
-	int ktora_gen = 0;
+//////////////////////////////////////////////////////////////////////////
+	/// petla while - glowny przebieg programu
+	/// rozwiazywanie problemu - serce algorytmu genetycznego
 	while(!ga.done())
 	{
+	
+	//////////////////////////////////////////////////////////////////////////
+		/// ta czesc sluzy do okreslenia jak wiele razy algorytm nie byl w stanie znalezc lepszego wyniku
 		if(przewrocil_sie_global==tmp_przewrocil_sie_global)
-			++tmp_ilosc_polozonych_klockow;
+			++tmp_ilosc_powtorzen;
 		else
-			tmp_ilosc_polozonych_klockow = 0;
+			tmp_ilosc_powtorzen = 0;
 
 		tmp_przewrocil_sie_global = przewrocil_sie_global;
+	//////////////////////////////////////////////////////////////////////////
 
-		ga.maximize();
-		ga.step();
 
+	//////////////////////////////////////////////////////////////////////////
+		ga.maximize();		/// maksymalizowanie wynikow
+		ga.step();			/// nastepna generacja ...
+	//////////////////////////////////////////////////////////////////////////
+
+	
+	//////////////////////////////////////////////////////////////////////////
+		/// wypis obecnych wynikow
 		std::cout << ktora_gen << " :   " << przewrocil_sie_global_w_generacji << "  :  " << przewrocil_sie_global << "      \r" ;
-		std::cout << "\r";
-		if(ga.generation() % ngen/60 == 0)
-			std::cout << ".";
-		if(tmp_ilosc_polozonych_klockow>20)
+	//////////////////////////////////////////////////////////////////////////
+
+
+	//////////////////////////////////////////////////////////////////////////
+		/// czesc odpowiadajaca za zmiane pradopodobienstw krzyowania oraz mutacji
+		/// w wypadku gdy algorytm wiele razy nie znalazl dobrego rozwiazania
+		/// - w zalozeniu ma pomoc znalezc lepsze rozwiazanie oraz zapobiegac stagnacji w populacji
+		///		- raz wartosci prawdopodobienstw sa zwiekszane, raz sa liczba losowa
+		if(tmp_ilosc_powtorzen>20)
 		{
 			++wykryto_stagnacje;
 			if(pmut < 0.09)
@@ -242,7 +274,7 @@ int main(int argc, char **argv)
 			ga.pMutation(pmut);
 			ga.pCrossover(pcross);
 			
-			tmp_ilosc_polozonych_klockow = 0;
+			tmp_ilosc_powtorzen = 0;
 		}
 
 		if(wykryto_stagnacje > 10)
@@ -253,23 +285,30 @@ int main(int argc, char **argv)
 			ga.pCrossover(pcross);
 			wykryto_stagnacje = 0;
 		}
+	//////////////////////////////////////////////////////////////////////////
 		
-		//std::time_t tmp_stop = clock();
-		//if( ((float)(tmp_stop-start)/CLOCKS_PER_SEC) )
 
+
+	//////////////////////////////////////////////////////////////////////////
+		/// ustawianie wartosci zmiennych 
 		przewrocil_sie_global_w_generacji = 0;
 		ktora_gen++;
+	//////////////////////////////////////////////////////////////////////////
 	}
 
-
+//////////////////////////////////////////////////////////////////////////
+	/// zapis najleszego osobnika do pliku
 	GA1DArrayGenome<Block>& best_of_all = (GA1DArrayGenome<Block> &)ga.statistics().bestIndividual();
 	write_blocks_file("out.txt", best_of_all/*(GA1DArrayGenome<Block> &)ga.statistics().bestPopulation().worst()*/);
-	std::cout << "\n" << count_max_width(best_of_all) << "     " << best_of_all.score() <<" \n";
-	//std::cout << std::endl;
+	std::cout << "\n" << maksymalna_szerokosc_osobnika(best_of_all) << "     " << best_of_all.score() <<" \n";
+//////////////////////////////////////////////////////////////////////////
 
+
+//////////////////////////////////////////////////////////////////////////
+	/// konczenie programu wraz z wysietleniem czasu wykonia
 	std::time_t stop = clock();
-
 	std::cout << "Program wykonal sie w :" << ((float)(stop-start)/CLOCKS_PER_SEC) << "[s]" << "\n";
+//////////////////////////////////////////////////////////////////////////
 
 	return 0;
 }
@@ -417,7 +456,7 @@ float objective(GAGenome & c)
 	return result;
 }
 
-float count_max_width(const GA1DArrayGenome<Block>& best)
+float maksymalna_szerokosc_osobnika(const GA1DArrayGenome<Block>& best)
 {
 	float	x1 = 0.0,
 			x2 = 0.0;
