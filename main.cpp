@@ -13,10 +13,10 @@
 
 class Block;
 
-int popsize							= 500;
-int ngen							= 2000;
+int popsize							= 100;//500;
+int ngen							= 300;//2000;
 float pmut							= 0.005;
-float pcross						= 0.2;
+float pcross						= 0.65;
 
 int kolejnosc = 0;
 int przewrocil_sie_global = 0;
@@ -84,7 +84,11 @@ public:
 		tmp = this->h_k;
 		this->h_k = this->w_k;
 		this->w_k = tmp;
-		this->turned = true;
+
+		if(turned)
+			this->turned = false;
+		else
+			this->turned = true;
 		setHalfPoint();
 	}
 
@@ -252,7 +256,7 @@ float objective(GAGenome & c)
 			x1 = 0.0,
 			x2 = 0.0,
 			y_k,
-			kalibracja = 0.05,
+			kalibracja = 0.00,
 			kara_x = random_float(0.0,0.7),
 			kara_y = random_float(0.0,0.7),
 			rzut_moneta = 0.0;
@@ -269,6 +273,8 @@ float objective(GAGenome & c)
 		if(rzut_moneta >= 0.5)
 			genome.gene(i).rotate();
 
+		//Block b = genome.gene(i);
+
 		if(genome.gene(i).w_k > genome.gene(i).h_k)
 			++rotated_blocks_good;
 		else
@@ -284,7 +290,7 @@ float objective(GAGenome & c)
 
 			break;
 			default: 
-				/// wysnaczanie x_k
+				/// wyznaczanie x_k
 				max_prawe_wychylenie = genome.gene(i-1).w_k - genome.gene(i).half_w;
 				genome.gene(i).x_k = random_float((-1.0)*genome.gene(i).half_w+(kara_x*genome.gene(i).half_w)+kalibracja, max_prawe_wychylenie-(kara_y*max_prawe_wychylenie)-kalibracja);
 
@@ -301,7 +307,7 @@ float objective(GAGenome & c)
 	{
 		if(przewrocil_sie)
 			break;//genome.gene(i+1).x_k = 0.0;
-		n=0;
+		n=0; // wazny !!!!!!!!!!!!!!!!!!!!!!!!!!! BLAD !!!!!!!!!!!!!!!!!!!!!!!!!!!
 		srodek_ciezkosci = 0.0;
 		punkt_srodka_ciezkosci = 0.0;
 
@@ -320,16 +326,21 @@ float objective(GAGenome & c)
 			punkt_srodka_ciezkosci += genome.gene(j).mid_point;
 			srodek_ciezkosci = (punkt_srodka_ciezkosci) / n;
 
+			//Block a = genome.gene(j);
+
 			switch(przewrocil_sie)
 			{
 			case 0:
-				if( ( genome.gene(j).x_k >= 0 ) && ( (srodek_ciezkosci > ((genome.gene(j-1).mid_point + genome.gene(j-1).half_w))-kalibracja) || (srodek_ciezkosci < ((genome.gene(j-1).mid_point - genome.gene(j-1).half_w))+kalibracja) ))
+				if( ( genome.gene(j).x_k >= 0 ) && ( (srodek_ciezkosci > ((genome.gene(j-1).mid_point + genome.gene(j-1).half_w))/*-kalibracja*/) || (srodek_ciezkosci < ((genome.gene(j-1).mid_point - genome.gene(j-1).half_w))/*+kalibracja*/) ))
 				{
+					//Block b = genome.gene(j);
 					przewrocil_sie = j;
 					genome.gene(j).x_k = (float)INT_MAX;
 				}
-				else if( ( genome.gene(j).x_k < 0 ) && ( (srodek_ciezkosci > ((genome.gene(j-1).mid_point + genome.gene(j-1).half_w))-kalibracja) || (srodek_ciezkosci < ((genome.gene(j-1).mid_point - genome.gene(j-1).half_w))+kalibracja) ))
+				else if( ( genome.gene(j).x_k < 0 ) && ( (srodek_ciezkosci > ((genome.gene(j-1).mid_point + genome.gene(j-1).half_w))/*-kalibracja*/) || (srodek_ciezkosci < ((genome.gene(j-1).mid_point - genome.gene(j-1).half_w))/*+kalibracja*/) ))
 				{
+					//Block c_p = genome.gene(j-1);
+					//Block c = genome.gene(j);
 					przewrocil_sie = j;
 					genome.gene(j).x_k = (float)INT_MAX;
 				}
