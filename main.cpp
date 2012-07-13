@@ -13,9 +13,9 @@
 
 class Block;
 
-int popsize							= 100;//500;
-int ngen							= 300;//2000;
-float pmut							= 0.005;
+int popsize							= 500;//500;
+int ngen							= 1000;//2000;
+float pmut							= 0.05;
 float pcross						= 0.65;
 
 int kolejnosc = 0;
@@ -257,8 +257,9 @@ float objective(GAGenome & c)
 			x2 = 0.0,
 			y_k,
 			kalibracja = 0.00,
-			kara_x = random_float(0.0,0.7),
-			kara_y = random_float(0.0,0.7),
+			kara = 0.0,
+			kara_x = random_float(0.0,0.3),
+			kara_y = random_float(0.4,0.7),
 			rzut_moneta = 0.0;
 
 	int		przewrocil_sie = 0,
@@ -270,7 +271,7 @@ float objective(GAGenome & c)
 		///obrót klocków - 50% szans na obrót
 		rzut_moneta = random_float(0.0,1.0);
 
-		if(rzut_moneta >= 0.5)
+		if(rzut_moneta >= 0.45)
 			genome.gene(i).rotate();
 
 		//Block b = genome.gene(i);
@@ -287,7 +288,6 @@ float objective(GAGenome & c)
 				x1 = genome.gene(i).half_w;
 				x2 = -x1;
 				genome.gene(i).mid_point = 0.0;
-
 			break;
 			default: 
 				/// wyznaczanie x_k
@@ -306,10 +306,21 @@ float objective(GAGenome & c)
 	for(int i = 1;i<amount_of_blocks;++i)
 	{
 		if(przewrocil_sie)
-			break;//genome.gene(i+1).x_k = 0.0;
+			break;
 		n=0; // wazny !!!!!!!!!!!!!!!!!!!!!!!!!!! BLAD !!!!!!!!!!!!!!!!!!!!!!!!!!!
 		srodek_ciezkosci = 0.0;
 		punkt_srodka_ciezkosci = 0.0;
+
+		switch(i)
+		{
+		case 0 :	if(genome.gene(i).w_k<genome.gene(i).h_k)
+						kara -= amount_of_blocks;
+			break;
+		default:	if(genome.gene(i).w_k<genome.gene(i).h_k)
+						kara -= (amount_of_blocks-i);
+			break;
+		}
+
 
 		for (int j = i; j>0;--j)
 		{
@@ -353,11 +364,12 @@ float objective(GAGenome & c)
 	przewrocil_sie_global_w_generacji = MAX(przewrocil_sie,przewrocil_sie_global_w_generacji);
 
 	if(przewrocil_sie==0)
-		result = 8.0*amount_of_blocks + 0.05*(x2+fabs(x1)) + (rotated_blocks_good-rotated_blocks_bad);
+		result = 10.0*amount_of_blocks + 0.5*(x2+fabs(x1)) + 2.0*(rotated_blocks_good-rotated_blocks_bad) +	0.01*kara;
 	else
-		result =	40.0*(przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/) 
-				+	0.05*(x2+fabs(x1)*((fabs(x2+fabs(x1) - max_width))/max_width))
-				+ 	(rotated_blocks_good-rotated_blocks_bad);
+		result =	0.70*(40.0*(przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/))
+				+	0.1*(x2+fabs(x1)*((fabs(x2+fabs(x1) - max_width))/max_width))
+				+ 	0.03*(rotated_blocks_good-rotated_blocks_bad)
+				+	0.17*kara;
 
 	//std::cout << x1 << "    " << x2 << "   " << x2+fabs(x1) << "    " << result <<std::endl;
 
