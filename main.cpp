@@ -14,14 +14,14 @@
 class Block;
 
 int popsize							= 500;//500;
-int ngen							= 1000;//2000;
+int ngen							= 4000;//2000;
 float pmut							= 0.05;
 float pcross						= 0.65;
 
 int kolejnosc = 0;
 int przewrocil_sie_global = 0;
 int przewrocil_sie_global_w_generacji = 0;
-int max_width = 0;
+//int max_width = 0;
 
 unsigned int amount_of_blocks		= 0;
 std::vector<Block> blocks_from_file;
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
 			ga.pCrossover(pcross);
 			wykryto_stagnacje = 0;
 		}
-
+		
 		przewrocil_sie_global_w_generacji = 0;
 		ktora_gen++;
 	}
@@ -258,13 +258,14 @@ float objective(GAGenome & c)
 			y_k,
 			kalibracja = 0.00,
 			kara = 0.0,
-			kara_x = random_float(0.0,0.3),
-			kara_y = random_float(0.4,0.7),
+			kara_x = 0.0,//random_float(0.0,0.3),
+			kara_y = 0.0,//random_float(0.4,0.7),
 			rzut_moneta = 0.0;
 
 	int		przewrocil_sie = 0,
 			rotated_blocks_good = 0,
-			rotated_blocks_bad	= 0;
+			rotated_blocks_bad	= 0,
+			local_max_width = 0;
 	
 	for(unsigned int i=0; i<amount_of_blocks;++i)
 	{
@@ -300,6 +301,9 @@ float objective(GAGenome & c)
 				
 			break;
 		}
+
+		if(kolejnosc)
+			local_max_width =  MAX(local_max_width,genome.gene(i).w_k);
 	}
 
 	int n=0;
@@ -366,10 +370,10 @@ float objective(GAGenome & c)
 	if(przewrocil_sie==0)
 		result = 10.0*amount_of_blocks + 0.5*(x2+fabs(x1)) + 2.0*(rotated_blocks_good-rotated_blocks_bad) +	0.01*kara;
 	else
-		result =	0.70*(40.0*(przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/))
-				+	0.1*(x2+fabs(x1)*((fabs(x2+fabs(x1) - max_width))/max_width))
-				+ 	0.03*(rotated_blocks_good-rotated_blocks_bad)
-				+	0.17*kara;
+		result =	7.75*(40.0*(przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/))
+				+	0.1*(x2+fabs(x1)*((fabs(x2+fabs(x1) - local_max_width))/local_max_width))
+				+ 	0.01*(rotated_blocks_good-rotated_blocks_bad)
+				+	0.14*kara;
 
 	//std::cout << x1 << "    " << x2 << "   " << x2+fabs(x1) << "    " << result <<std::endl;
 
@@ -408,8 +412,8 @@ void init_my_population(GAGenome &ga)
 		//if ( /*kolejnosc!=1 &&*/ my_gene[i].w_k < my_gene[i].h_k )
 		//	my_gene[i].rotate();
 
-		if(kolejnosc)
-			max_width =  MAX(max_width,my_gene[i].w_k);
+		//if(kolejnosc)
+		//	max_width =  MAX(max_width,my_gene[i].w_k);
 	}
 	
 	kolejnosc++;
