@@ -13,22 +13,26 @@
 
 class Block;
 
-int popsize							= 500;//500;
-int ngen							= 1000;//2000;
-float pmut							= 0.05;
-float pcross						= 0.65;
+int popsize								= 1000; // wielkosc populacji
+int ngen								= 3000; // ilosc generacji
+float pmut								= 0.05; // prawdopodobienstwo mutacji
+float pcross							= 0.65; // prawdopodobienstwo krzyzowania
 
-int kolejnosc = 0;
-int przewrocil_sie_global = 0;
-int przewrocil_sie_global_w_generacji = 0;
+int kolejnosc							= 0;	// zmienna uzywana przy inicjalizacji osobnika - 1 osobnik jest inicjalizowany inaczej							
+int przewrocil_sie_global				= 0;	// zmienna okreslajaca max w generacjach liczbe klockow po jaka zostala dobrze ulozona 
+int przewrocil_sie_global_w_generacji	= 0;	// zmienna okreslajaca max w danej generacji liczbe klockow po jaka zostala dobrze ulozona 
 //int max_width = 0;
 
-unsigned int amount_of_blocks		= 0;
-std::vector<Block> blocks_from_file;
+unsigned int amount_of_blocks			= 0;	// liczba wczytanych klocków
+std::vector<Block> blocks_from_file;			// tablica wczytancyh klocków
 
+/// klasa Block -  klasa klocków
+/// - s³u¿y do przechowywania wartosci klocków 
+/// - przechowuje wszystkie potrzebne wartosci do okreslenia po³o¿enia, wielkoœci oraz obrotu klocka
 class Block
 {
 public:
+	/// domyslny konstruktor, inicjalizacja danych
 	Block()
 	{
 		i_k		= 0;
@@ -40,6 +44,7 @@ public:
 		setHalfPoint();
 	}
 
+	/// konsktruktor z ustawieniem wartosci - wiekszosc z nich moze byc domyslna
 	Block(const int &i, const int &w = 0, const int &h = 0, const float &x = 0, const bool& t = 0, const float &mid=0.0)
 	{
 		i_k		= i;
@@ -51,6 +56,7 @@ public:
 		setHalfPoint();
 	}
 
+	/// fukncja ustawiajaca wartosci klockow - odpowiednik konstruktora
 	void setBlock(const int &i, const int &w, const int &h, const float &x, const bool& t, const float &mid=0.0)
 	{
 		i_k		= i;
@@ -62,6 +68,8 @@ public:
 		setHalfPoint();
 	}
 
+	/// funkcja kopiujaca wartosci z zdanego klocka
+	/// uzywana przy inicjalizacji osobnika
 	void cloneBlock(const Block &block)
 	{
 		i_k		= block.i_k;
@@ -73,11 +81,14 @@ public:
 		setHalfPoint();
 	}
 
+	/// funkcja obliczajaca polowe podstawy
+	/// potrzeba do obliczen srodka ciezkosci klocka
 	void setHalfPoint() const
 	{
 		half_w	= w_k/2.0;
 	}
 
+	/// funckja obracajaca klocek
 	void rotate() const 
 	{
 		int tmp = 0;
@@ -92,6 +103,8 @@ public:
 		setHalfPoint();
 	}
 
+//////////////////////////////////////////////////////////////////////////
+	///operatory na potrzeby biblioteki
 	operator int()
 	{
 		return this->i_k;
@@ -108,19 +121,16 @@ public:
 	}
 
 	friend std::ostream& operator<< (std::ostream &out, const Block& block);
+//////////////////////////////////////////////////////////////////////////
 
-	void setX(float x)
-	{
-		x_k = x;
-	}
-
-	mutable int		i_k,
-					w_k,
-					h_k;
-	mutable float	x_k, 
-					mid_point,
-					half_w;
-	mutable bool	turned;
+	/// deklaracja zmiennych 
+	mutable int		i_k,		/// indeks klocka
+					w_k,		/// szerokosc klocka
+					h_k;		/// wysokosc klocka
+	mutable float	x_k,		/// przesuniecie klocka wzgledem poprzedniej lewej krawedzi
+					mid_point,	/// wspolrzedna srodka klocka ( na osi X )
+					half_w;		/// polowa szerokosci klocka
+	mutable bool	turned;		/// czy klocek zostal obrocony 
 };
 
 std::ostream& operator<<(std::ostream &out, const Block& block)
@@ -128,23 +138,46 @@ std::ostream& operator<<(std::ostream &out, const Block& block)
 	return (out << block.i_k);
 }
 
+/// funkcja dostosowania - dalszy opis w ciele funkcji
 float objective(GAGenome &);
+
+/// funkcja inicjalizujaca osobnika - osobnik jest inicjalizowany klockami w losowej kolejnosci
 void init_my_population(GAGenome &ga);
+
+/// funkcja na potrzeby testow sluzaca do generowana pliktu testowego z klockami
+/// - nazwa pliku, ilosc klockow
 void generate_blocks_file(const std::string &, const int &);
+
+/// funckja zczytujaca klocki z pliku 
+/// - nazwa pliku
 void read_blocks_file(const std::string &);
+
+/// funckja generujaca losowa liczbe zmiennoprzecinkowa typu float
+/// - przedzial od, do
 float random_float(const float &, const float &);
+
+/// funkcja zapisujaca wyniki do pliku
 void write_blocks_file(const std::string &, const GA1DArrayGenome<Block>&);
 
+/// funkcja napisana na potrzeby inicjalizacji - jeden z osobnikow jest inicjalizawany posortowanymi wartosciami
+/// wprowadza roznorodnosc w populacji
 bool sortuj_dobrze (const Block &i,const Block &j) { return (i.w_k>j.w_k); }
 
+/// funkcja obliczajaca szerokosc najlepszego osobnika
+/// - na potrzeby testow
 float count_max_width(const GA1DArrayGenome<Block>& );
 
 
+//////////////////////////////////////////////////////////////////////////
+/////////////////////////// main /////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-	std::time_t start = clock();
-	srand((unsigned)time(0));
-	//generate_blocks_file("plik.txt", 300);
+	std::time_t start = clock();	/// pobranie czasu startu programu
+	srand((unsigned)time(0));		/// wymuszenie losowania roznych wartosci w rand()	
+
+	//generate_blocks_file("plik.txt", 300);/// generowanie pliku z klockami
+
 	read_blocks_file("plik.txt");
 
 	GA1DArrayGenome<Block> genome(amount_of_blocks,objective);
@@ -269,7 +302,7 @@ float objective(GAGenome & c)
 
 		if(rzut_moneta >= 0.5)
 		{
-			if(genome.gene(i).w_k < genome.gene(i).h_k)
+			//if(genome.gene(i).w_k < genome.gene(i).h_k)
 				genome.gene(i).rotate();
 		}
 
