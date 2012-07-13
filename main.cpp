@@ -14,7 +14,7 @@
 class Block;
 
 int popsize							= 500;//500;
-int ngen							= 4000;//2000;
+int ngen							= 2000;//2000;
 float pmut							= 0.05;
 float pcross						= 0.65;
 
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 			std::cout << ".";
 		if(tmp_ilosc_polozonych_klockow>20)
 		{
-			std::cout << "-w-";//"Wykryto stagnacje - zmieniam";
+			//std::cout << "-w-";//"Wykryto stagnacje - zmieniam";
 			++wykryto_stagnacje;
 			if(pmut < 0.05)
 				pmut += 0.01;
@@ -258,8 +258,8 @@ float objective(GAGenome & c)
 			y_k,
 			kalibracja = 0.00,
 			kara = 0.0,
-			kara_x = 0.0,//random_float(0.0,0.3),
-			kara_y = 0.0,//random_float(0.4,0.7),
+			kara_x = 0.5,//random_float(0.0,0.3),
+			kara_y = 0.5,//random_float(0.4,0.7),
 			rzut_moneta = 0.0;
 
 	int		przewrocil_sie = 0,
@@ -272,8 +272,11 @@ float objective(GAGenome & c)
 		///obrót klocków - 50% szans na obrót
 		rzut_moneta = random_float(0.0,1.0);
 
-		if(rzut_moneta >= 0.45)
-			genome.gene(i).rotate();
+		if(rzut_moneta >= 0.5)
+		{
+			if(genome.gene(i).w_k < genome.gene(i).h_k)
+				genome.gene(i).rotate();
+		}
 
 		//Block b = genome.gene(i);
 
@@ -319,6 +322,9 @@ float objective(GAGenome & c)
 		{
 		case 0 :	if(genome.gene(i).w_k<genome.gene(i).h_k)
 						kara -= amount_of_blocks;
+					
+					if(genome.gene(i).w_k != local_max_width)
+						kara -= 2.0*amount_of_blocks;
 			break;
 		default:	if(genome.gene(i).w_k<genome.gene(i).h_k)
 						kara -= (amount_of_blocks-i);
@@ -341,21 +347,16 @@ float objective(GAGenome & c)
 			punkt_srodka_ciezkosci += genome.gene(j).mid_point;
 			srodek_ciezkosci = (punkt_srodka_ciezkosci) / n;
 
-			//Block a = genome.gene(j);
-
 			switch(przewrocil_sie)
 			{
 			case 0:
-				if( ( genome.gene(j).x_k >= 0 ) && ( (srodek_ciezkosci > ((genome.gene(j-1).mid_point + genome.gene(j-1).half_w))/*-kalibracja*/) || (srodek_ciezkosci < ((genome.gene(j-1).mid_point - genome.gene(j-1).half_w))/*+kalibracja*/) ))
+				if( ( genome.gene(j).x_k >= 0 ) && ( (srodek_ciezkosci > ((genome.gene(j-1).mid_point + genome.gene(j-1).half_w))) || (srodek_ciezkosci < ((genome.gene(j-1).mid_point - genome.gene(j-1).half_w))) ))
 				{
-					//Block b = genome.gene(j);
 					przewrocil_sie = j;
 					genome.gene(j).x_k = (float)INT_MAX;
 				}
-				else if( ( genome.gene(j).x_k < 0 ) && ( (srodek_ciezkosci > ((genome.gene(j-1).mid_point + genome.gene(j-1).half_w))/*-kalibracja*/) || (srodek_ciezkosci < ((genome.gene(j-1).mid_point - genome.gene(j-1).half_w))/*+kalibracja*/) ))
+				else if( ( genome.gene(j).x_k < 0 ) && ( (srodek_ciezkosci > ((genome.gene(j-1).mid_point + genome.gene(j-1).half_w))) || (srodek_ciezkosci < ((genome.gene(j-1).mid_point - genome.gene(j-1).half_w))) ))
 				{
-					//Block c_p = genome.gene(j-1);
-					//Block c = genome.gene(j);
 					przewrocil_sie = j;
 					genome.gene(j).x_k = (float)INT_MAX;
 				}
@@ -370,10 +371,11 @@ float objective(GAGenome & c)
 	if(przewrocil_sie==0)
 		result = 10.0*amount_of_blocks + 0.5*(x2+fabs(x1)) + 2.0*(rotated_blocks_good-rotated_blocks_bad) +	0.01*kara;
 	else
-		result =	7.75*(40.0*(przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/))
-				+	0.1*(x2+fabs(x1)*((fabs(x2+fabs(x1) - local_max_width))/local_max_width))
-				+ 	0.01*(rotated_blocks_good-rotated_blocks_bad)
-				+	0.14*kara;
+		result	=	50.5*przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/
+				+	0.5*x2+fabs(x1)/**((fabs(x2+fabs(x1) - local_max_width))/local_max_width))*/
+				+ 	5.0*rotated_blocks_good
+				-	10.0*rotated_blocks_bad
+				+	kara;
 
 	//std::cout << x1 << "    " << x2 << "   " << x2+fabs(x1) << "    " << result <<std::endl;
 
