@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 {
 	std::time_t start = clock();
 	srand((unsigned)time(0));
-	//generate_blocks_file("plik.txt", 300);
+	generate_blocks_file("plik.txt", 30);
 	read_blocks_file("plik.txt");
 
 	GA1DArrayGenome<Block> genome(amount_of_blocks,objective);
@@ -368,14 +368,20 @@ float objective(GAGenome & c)
 	przewrocil_sie_global = MAX(przewrocil_sie,przewrocil_sie_global);
 	przewrocil_sie_global_w_generacji = MAX(przewrocil_sie,przewrocil_sie_global_w_generacji);
 
+	
+	//	result = 10.0*amount_of_blocks + 0.5*(x2+fabs(x1)) + 2.0*(rotated_blocks_good-rotated_blocks_bad) +	0.01*kara;
 	if(przewrocil_sie==0)
-		result = 10.0*amount_of_blocks + 0.5*(x2+fabs(x1)) + 2.0*(rotated_blocks_good-rotated_blocks_bad) +	0.01*kara;
-	else
-		result	=	50.5*przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/
-				+	0.5*x2+fabs(x1)/**((fabs(x2+fabs(x1) - local_max_width))/local_max_width))*/
-				+ 	5.0*rotated_blocks_good
+		przewrocil_sie = amount_of_blocks;
+
+	result	=	50.5*przewrocil_sie/**((amount_of_blocks-przewrocil_sie)/amount_of_blocks)*/
+			+	5.9*x2+fabs(x1)/**((fabs(x2+fabs(x1) - local_max_width))/local_max_width))*/;
+
+	if(amount_of_blocks > 50)
+	{
+		result	+= 	5.0*rotated_blocks_good
 				-	10.0*rotated_blocks_bad
 				+	kara;
+	}
 
 	//std::cout << x1 << "    " << x2 << "   " << x2+fabs(x1) << "    " << result <<std::endl;
 
@@ -423,7 +429,7 @@ void init_my_population(GAGenome &ga)
 
 void generate_blocks_file(const std::string &nazwa, const int &N)
 {
-	std::ofstream blocks_file(nazwa);
+	std::ofstream blocks_file(nazwa.c_str());
 
 	blocks_file << N << std::endl;
 
@@ -458,7 +464,7 @@ float random_float(const float &LO, const float &HI)
 
 void write_blocks_file(const std::string &name, const GA1DArrayGenome<Block>& data)
 {
-	std::ofstream file(name);
+	std::ofstream file(name.c_str());
 
 	for(unsigned j=0;j<amount_of_blocks;++j)
 	{
