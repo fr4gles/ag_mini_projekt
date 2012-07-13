@@ -146,7 +146,7 @@ std::ostream& operator<<(std::ostream &out, const Block& block)
 float objective(GAGenome &);
 
 /// funkcja inicjalizujaca osobnika - osobnik jest inicjalizowany klockami w losowej kolejnosci
-void init_my_population(GAGenome &ga);
+void init_my_population(GAGenome &);
 
 /// funkcja na potrzeby testow sluzaca do generowana pliktu testowego z klockami
 /// - nazwa pliku, ilosc klockow
@@ -523,7 +523,6 @@ void init_my_population(GAGenome &ga)
 	if(kolejnosc)
 		std::random_shuffle(blocks_from_file.begin(),blocks_from_file.end());
 
-	int tmp = 0;
 	for(unsigned int i=0;i<amount_of_blocks;++i)
 	{
 		my_gene[i].cloneBlock(blocks_from_file[i]);
