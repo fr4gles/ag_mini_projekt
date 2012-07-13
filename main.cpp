@@ -203,7 +203,7 @@ int main(int argc, char **argv)
 		{
 			//std::cout << "-w-";//"Wykryto stagnacje - zmieniam";
 			++wykryto_stagnacje;
-			if(pmut < 0.05)
+			if(pmut < 0.09)
 				pmut += 0.01;
 			else
 				pmut = random_float(0.5,1.0);
@@ -256,10 +256,9 @@ float objective(GAGenome & c)
 			x1 = 0.0,
 			x2 = 0.0,
 			y_k,
-			kalibracja = 0.00,
 			kara = 0.0,
-			kara_x = 0.5,//random_float(0.0,0.3),
-			kara_y = 0.5,//random_float(0.4,0.7),
+			kara_x = random_float(0.0,0.5),
+			kara_y = random_float(0.0,0.5),
 			rzut_moneta = 0.0;
 
 	int		przewrocil_sie = 0,
@@ -278,8 +277,6 @@ float objective(GAGenome & c)
 				genome.gene(i).rotate();
 		}
 
-		//Block b = genome.gene(i);
-
 		if(genome.gene(i).w_k > genome.gene(i).h_k)
 			++rotated_blocks_good;
 		else
@@ -296,7 +293,7 @@ float objective(GAGenome & c)
 			default: 
 				/// wyznaczanie x_k
 				max_prawe_wychylenie = genome.gene(i-1).w_k - genome.gene(i).half_w;
-				genome.gene(i).x_k = random_float((-1.0)*genome.gene(i).half_w+(kara_x*genome.gene(i).half_w)+kalibracja, max_prawe_wychylenie-(kara_y*max_prawe_wychylenie)-kalibracja);
+				genome.gene(i).x_k = random_float((-1.0)*genome.gene(i).half_w+(kara_x*genome.gene(i).half_w), max_prawe_wychylenie-(kara_y*max_prawe_wychylenie));
 
 				/// wyznaczanie wspolrzedneych srodkowego punktu
 				y_k = genome.gene(i).w_k - ( (-1.0)*(genome.gene(i).x_k) + genome.gene(i-1).w_k );
