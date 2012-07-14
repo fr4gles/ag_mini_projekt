@@ -42,14 +42,8 @@ class Block
 {
 public:
 	/// domyslny konstruktor, inicjalizacja danych
-	Block()
+	Block() : i_k(0), w_k(0), h_k(0), x_k(0), turned(false), mid_point(0.0)
 	{
-		i_k		= 0;
-		w_k		= 0;
-		h_k		= 0;
-		x_k		= 0.0;
-		turned	= false;
-		mid_point = 0.0;
 		setHalfPoint();
 	}
 
@@ -481,11 +475,11 @@ float objective(GAGenome & c)
 //////////////////////////////////////////////////////////////////////////
 	/// obliczanie zmiennej result - wyniku zwracanego przez objective
 	/// - zastosowanie odpowiednich, eksperymentalnie dobranych wspó³czynników
-	float	wspolczynnik_szer = 10.5,
+	float	wspolczynnik_szer = 30.5,
 		wspolczynnik_wys  = 70.5;
 
 	if(amount_of_blocks <= 75)
-		wspolczynnik_szer = 20.0;
+		wspolczynnik_szer = 50.0;
 
 	if(amount_of_blocks > 150)
 		wspolczynnik_wys = 90.5;
