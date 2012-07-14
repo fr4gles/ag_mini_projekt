@@ -18,13 +18,13 @@
 #include <algorithm>
 #include <ctime>
 
-#define MAX(x,y) (x)>(y)?(x):(y)
-#define MIN(x,y) (x)<(y)?(x):(y)
+#define MAX(x,y) (x)>(y)?(x):(y)				// szukanie maximum
+#define MIN(x,y) (x)<(y)?(x):(y)				// szukanie minimum
 
 class Block;
 
 int popsize								= 1500; // wielkosc populacji
-int ngen								= 750; // ilosc generacji
+int ngen								= 750;	// ilosc generacji
 float pmut								= 0.05; // prawdopodobienstwo mutacji
 float pcross							= 0.77; // prawdopodobienstwo krzyzowania
 
