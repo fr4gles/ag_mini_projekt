@@ -1,3 +1,13 @@
+/************************************************************************/
+/* Mini projekt - Algorytmy Genetyczne - Micha³ Franczyk                */
+/************************************************************************/
+
+/**
+ *	@file main.cpp
+ *	@author Micha³ Franczyk
+ */
+
+
 #include <iostream>
 #include <vector>
 #define _USE_MATH_DEFINES
@@ -13,15 +23,14 @@
 
 class Block;
 
-int popsize								= 1000; // wielkosc populacji
-int ngen								= 3000; // ilosc generacji
+int popsize								= 1500; // wielkosc populacji
+int ngen								= 750; // ilosc generacji
 float pmut								= 0.05; // prawdopodobienstwo mutacji
-float pcross							= 0.65; // prawdopodobienstwo krzyzowania
+float pcross							= 0.77; // prawdopodobienstwo krzyzowania
 
 int kolejnosc							= 0;	// zmienna uzywana przy inicjalizacji osobnika - 1 osobnik jest inicjalizowany inaczej							
 int przewrocil_sie_global				= 0;	// zmienna okreslajaca max w generacjach liczbe klockow po jaka zostala dobrze ulozona 
 int przewrocil_sie_global_w_generacji	= 0;	// zmienna okreslajaca max w danej generacji liczbe klockow po jaka zostala dobrze ulozona 
-//int max_width = 0;
 
 unsigned int amount_of_blocks			= 0;	// liczba wczytanych klocków
 std::vector<Block> blocks_from_file;			// tablica wczytancyh klocków
@@ -139,9 +148,9 @@ std::ostream& operator<<(std::ostream &out, const Block& block)
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-/////////////////////// deklaracje funkcji ///////////////////////////////
-//////////////////////////////////////////////////////////////////////////
+/************************************************************************/
+/* deklaracje funkcji                                                   */
+/************************************************************************/
 /// funkcja dostosowania - dalszy opis w ciele funkcji
 float objective(GAGenome &);
 
@@ -163,24 +172,25 @@ float random_float(const float &, const float &);
 /// funkcja zapisujaca wyniki do pliku
 void write_blocks_file(const std::string &, const GA1DArrayGenome<Block>&);
 
-/// funkcja napisana na potrzeby inicjalizacji - jeden z osobnikow jest inicjalizawany posortowanymi wartosciami
-/// wprowadza roznorodnosc w populacji
-bool sortuj_dobrze (const Block &i,const Block &j) { return (i.w_k>j.w_k); }
-
 /// funkcja obliczajaca szerokosc najlepszego osobnika
 /// - na potrzeby testow
 float maksymalna_szerokosc_osobnika(const GA1DArrayGenome<Block>& );
-//////////////////////////////////////////////////////////////////////////
+
+/// funkcja napisana na potrzeby inicjalizacji - jeden z osobnikow jest inicjalizawany posortowanymi wartosciami
+/// wprowadza roznorodnosc w populacji
+bool sortuj_dobrze (const Block &,const Block &);
+
 
 //////////////////////////////////////////////////////////////////////////
-/////////////////////////// main /////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
+/************************************************************************/
+/* main                                                                 */
+/************************************************************************/
 int main(int argc, char **argv)
 {
 	std::time_t start = clock();	/// pobranie czasu startu programu
 	srand((unsigned)time(0));		/// wymuszenie losowania roznych wartosci w rand()	
 
-	//generate_blocks_file("plik.txt", 300);/// generowanie pliku z klockami
+	generate_blocks_file("plik.txt", 200);/// generowanie pliku z klockami
 
 	read_blocks_file("plik.txt");
 
@@ -221,7 +231,6 @@ int main(int argc, char **argv)
 	
 	int tmp_ilosc_powtorzen = 0;			/// zmienna tmp, okresla ilosc pwotorzen maksymalnej ilosci polozonych klockow klockow
 	int tmp_przewrocil_sie_global = 0;		/// zmienna tmp, okresla ilosc polozonych klockow w poprzedniej generacji
-	int wykryto_stagnacje = 0;				/// zmienna okreslajaca stopien stagnacji - nic sie nie zmienia, nie mozna ulozyc wiecej klockow
 	int ktora_gen = 0;						/// zmienna okresla numer generacji
 
 //////////////////////////////////////////////////////////////////////////
@@ -229,7 +238,7 @@ int main(int argc, char **argv)
 	/// rozwiazywanie problemu - serce algorytmu genetycznego
 	while(!ga.done())
 	{
-	
+
 	//////////////////////////////////////////////////////////////////////////
 		/// ta czesc sluzy do okreslenia jak wiele razy algorytm nie byl w stanie znalezc lepszego wyniku
 		if(przewrocil_sie_global==tmp_przewrocil_sie_global)
@@ -240,16 +249,9 @@ int main(int argc, char **argv)
 		tmp_przewrocil_sie_global = przewrocil_sie_global;
 	//////////////////////////////////////////////////////////////////////////
 
-
 	//////////////////////////////////////////////////////////////////////////
 		ga.maximize();		/// maksymalizowanie wynikow
 		ga.step();			/// nastepna generacja ...
-	//////////////////////////////////////////////////////////////////////////
-
-	
-	//////////////////////////////////////////////////////////////////////////
-		/// wypis obecnych wynikow
-		std::cout << ktora_gen << " :   " << przewrocil_sie_global_w_generacji << "  :  " << przewrocil_sie_global << "      \r" ;
 	//////////////////////////////////////////////////////////////////////////
 
 
@@ -260,11 +262,10 @@ int main(int argc, char **argv)
 		///		- raz wartosci prawdopodobienstw sa zwiekszane, raz sa liczba losowa
 		if(tmp_ilosc_powtorzen>20)
 		{
-			++wykryto_stagnacje;
 			if(pmut < 0.09)
 				pmut += 0.01;
 			else
-				pmut = random_float(0.5,1.0);
+				pmut = random_float(0.05,0.07);
 
 			if(pcross < 1.0)
 				pcross += 0.05;
@@ -273,20 +274,18 @@ int main(int argc, char **argv)
 
 			ga.pMutation(pmut);
 			ga.pCrossover(pcross);
-			
+
 			tmp_ilosc_powtorzen = 0;
 		}
+	//////////////////////////////////////////////////////////////////////////	
 
-		if(wykryto_stagnacje > 10)
-		{
-			pmut = 0.0;
-			pcross = 0.0;
-			ga.pMutation(pmut);
-			ga.pCrossover(pcross);
-			wykryto_stagnacje = 0;
-		}
+
+
 	//////////////////////////////////////////////////////////////////////////
-		
+		/// wypis obecnych wynikow
+		std::cout << ktora_gen << " :   " << przewrocil_sie_global_w_generacji << "  :  " << przewrocil_sie_global << "      \r" ;
+	//////////////////////////////////////////////////////////////////////////
+
 
 
 	//////////////////////////////////////////////////////////////////////////
@@ -313,9 +312,9 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-//////////////////////////////////////////////////////////////////////////
-/////////////////////// definicje  funkcji ///////////////////////////////
-//////////////////////////////////////////////////////////////////////////
+/************************************************************************/
+/* definicje funkcji                                                    */
+/************************************************************************/
 
 /// funkcja dostosowania - opis w ciele funckji
 float objective(GAGenome & c)
@@ -332,8 +331,8 @@ float objective(GAGenome & c)
 			x2 = 0.0,							/// maksymalne prawe wychylenie wiezy
 			y_k,								/// zmienna analogiczna do x_k, okresla wychylenie klocka wzgledem prawej krawedzi poprzednika
 			kara = 0.0,							/// zmienna odpowiedzialna za przechowywanie kary za zle ulozone klocki ( gdy szerokosc < wykososc )
-			kara_x = random_float(0.0,0.5),		/// zmienna radomowa, pozwala zawezic przedzial dlugosci x_k z lewej strony
-			kara_y = random_float(0.0,0.5),		/// zmienna radomowa, pozwala zawezic przedzial dlugosci x_k z prawej strony
+			kara_x = random_float(0.0,0.7),		/// zmienna radomowa, pozwala zawezic przedzial dlugosci x_k z lewej strony
+			kara_y = random_float(0.0,0.7),		/// zmienna radomowa, pozwala zawezic przedzial dlugosci x_k z prawej strony
 			rzut_moneta = 0.0;					/// zmienna losowa, imitujaca rzut moneta
 
 	int		przewrocil_sie = 0,					/// liczba klockow ktore algorytm zdolal ulozyc
@@ -352,14 +351,16 @@ float objective(GAGenome & c)
 	
 	//////////////////////////////////////////////////////////////////////////
 		///obrót klocków - 50% szans na obrót
-		/// ustawienie rotated_blocks_bad oraz rotated_blocks_good
 		rzut_moneta = random_float(0.0,1.0);
-		if(rzut_moneta >= 0.5)
+		if(rzut_moneta >= 0.5 && ( genome.gene(i).w_k < genome.gene(i).h_k ) )
 		{
-			//if(genome.gene(i).w_k < genome.gene(i).h_k)
 				genome.gene(i).rotate();
 		}
+	//////////////////////////////////////////////////////////////////////////
 
+
+	//////////////////////////////////////////////////////////////////////////
+		/// ustawienie rotated_blocks_bad oraz rotated_blocks_good
 		if(genome.gene(i).w_k > genome.gene(i).h_k)
 			++rotated_blocks_good;
 		else
@@ -419,7 +420,7 @@ float objective(GAGenome & c)
 						kara -= amount_of_blocks;
 					
 					if(genome.gene(i).w_k != local_max_width)
-						kara -= 2.0*amount_of_blocks;
+						kara -= 4.2*amount_of_blocks;
 			break;
 		default:	if(genome.gene(i).w_k<genome.gene(i).h_k)
 						kara -= (amount_of_blocks-i);
@@ -480,19 +481,23 @@ float objective(GAGenome & c)
 //////////////////////////////////////////////////////////////////////////
 	/// obliczanie zmiennej result - wyniku zwracanego przez objective
 	/// - zastosowanie odpowiednich, eksperymentalnie dobranych wspó³czynników
-	float wspolczynnik = 0.5;
+	float	wspolczynnik_szer = 10.5,
+		wspolczynnik_wys  = 70.5;
 
-	if(amount_of_blocks<100)
-		wspolczynnik = 8.0;
+	if(amount_of_blocks <= 75)
+		wspolczynnik_szer = 20.0;
 
-	result	=	70.5*przewrocil_sie
-			+	wspolczynnik*(x2+fabs(x1));
+	if(amount_of_blocks > 150)
+		wspolczynnik_wys = 90.5;
 
-	if(amount_of_blocks > 50)
+	result	=	wspolczynnik_wys*przewrocil_sie
+		+	wspolczynnik_szer*(x2+fabs(x1));
+
+	if(amount_of_blocks > 100 )
 	{
-		result	+= 	rotated_blocks_good
-				-	2.0*rotated_blocks_bad
-				+	0.5*kara;
+		result	+= 	22.2*rotated_blocks_good
+			-	31.4*rotated_blocks_bad
+			+	0.5*kara;
 	}
 //////////////////////////////////////////////////////////////////////////
 
@@ -576,4 +581,9 @@ void write_blocks_file(const std::string &name, const GA1DArrayGenome<Block>& da
 	}
 
 	file.close();
+}
+
+bool sortuj_dobrze (const Block &i,const Block &j)
+{
+	return (i.w_k>j.w_k);
 }
