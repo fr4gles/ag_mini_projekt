@@ -13,10 +13,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <ga/ga.h>
-#include <ctime>
 #include <cstdlib>
 #include <algorithm>
 #include <ctime>
+#include <climits>
 
 #define MAX(x,y) (x)>(y)?(x):(y)				// szukanie maximum
 #define MIN(x,y) (x)<(y)?(x):(y)				// szukanie minimum
