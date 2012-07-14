@@ -260,7 +260,7 @@ int main(int argc, char **argv)
 		/// w wypadku gdy algorytm wiele razy nie znalazl dobrego rozwiazania
 		/// - w zalozeniu ma pomoc znalezc lepsze rozwiazanie oraz zapobiegac stagnacji w populacji
 		///		- raz wartosci prawdopodobienstw sa zwiekszane, raz sa liczba losowa
-		if(tmp_ilosc_powtorzen>20)
+		if(tmp_ilosc_powtorzen>25)
 		{
 			if(pmut < 0.09)
 				pmut += 0.01;
