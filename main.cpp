@@ -12,6 +12,7 @@
 #include <vector>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <conio.h>
 #include <ga/ga.h>
 #include <cstdlib>
 #include <algorithm>
@@ -306,7 +307,7 @@ int main(int argc, char **argv)
 	std::time_t stop = clock();
 	std::cout << "Program wykonal sie w :" << ((float)(stop-start)/CLOCKS_PER_SEC) << "[s]" << "\n";
 //////////////////////////////////////////////////////////////////////////
-
+	getch();
 	return 0;
 }
 
