@@ -92,6 +92,7 @@ public:
 	}
 
 	/// funckja obracajaca klocek
+	/// - jesli klocek zostanie wylosowany do obrocenia to jest obracany
 	void rotate() const 
 	{
 		int tmp = 0;
@@ -127,6 +128,7 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 	/// deklaracja zmiennych 
+	/// mutable - aby sta³e obiekty mo¿na modyfikowaæ - wymaganie biblioteki GALib
 	mutable int		i_k,		/// indeks klocka
 					w_k,		/// szerokosc klocka
 					h_k;		/// wysokosc klocka
@@ -172,7 +174,7 @@ float maksymalna_szerokosc_osobnika(const GA1DArrayGenome<Block>& );
 
 /// funkcja napisana na potrzeby inicjalizacji - jeden z osobnikow jest inicjalizawany posortowanymi wartosciami
 /// wprowadza roznorodnosc w populacji
-bool sortuj_dobrze (const Block &,const Block &);
+bool sortuj (const Block &,const Block &);
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -214,7 +216,6 @@ int main(int argc, char **argv)
 	ga.pMutation(pmut);
 	ga.pCrossover(pcross);
 
-	//GANoScaling scaling;
 	GASigmaTruncationScaling scaling;
 	ga.scaling(scaling);
 
@@ -544,20 +545,21 @@ void generate_blocks_file(const std::string &nazwa, const int &N)
 
 void read_blocks_file(const std::string &tmp) 
 {
-	blocks_from_file.reserve(301);
-	FILE *file;
-	file = fopen(tmp.c_str(),"r");
-	if(file==NULL)	{ printf("Blad otwierania pliku z klockami. ABORT\n\n"); exit(-1); }
+	blocks_from_file.reserve(301); // rezerwacja pamiêci w celu optymalizacyjnym
+	FILE *file; file = fopen(tmp.c_str(),"r");
+	
+	if(file==NULL) // jeœli odczyt siê nie powiedzie, aplikacja jest zamykana
+	{ printf("Blad otwierania pliku z klockami. ABORT\n\n"); exit(-1); } 
 
 	int i,w,h; 
 	fscanf(file,"%d",&amount_of_blocks);
 	for(unsigned int j=0;j<amount_of_blocks;++j)
 	{
-		fscanf(file,"%d %d %d",&i,&w,&h);
-		blocks_from_file.push_back(Block(i,w,h));
+		fscanf(file,"%d %d %d",&i,&w,&h); // odczyt z pliku
+		blocks_from_file.push_back(Block(i,w,h)); // dodanie do tablicy
 	}
 
-	std::sort(blocks_from_file.begin(), blocks_from_file.end(),sortuj_dobrze);
+	std::sort(blocks_from_file.begin(), blocks_from_file.end(),sortuj);
 }
 
 float random_float(const float &LO, const float &HI)
@@ -570,14 +572,12 @@ void write_blocks_file(const std::string &name, const GA1DArrayGenome<Block>& da
 	std::ofstream file(name.c_str());
 
 	for(unsigned j=0;j<amount_of_blocks;++j)
-	{
 		file << data.gene(j).i_k << "\t" << data.gene(j).turned << "\t" << data.gene(j).x_k << std::endl;
-	}
 
 	file.close();
 }
 
-bool sortuj_dobrze (const Block &i,const Block &j)
+bool sortuj (const Block &i,const Block &j)
 {
 	return (i.w_k>j.w_k);
 }
