@@ -23,8 +23,8 @@
 
 class Block;
 
-int popsize								= 1500; // wielkosc populacji
-int ngen								= 750;	// ilosc generacji
+int popsize								= 1000; // wielkosc populacji
+int ngen								= 9000;	// ilosc generacji
 float pmut								= 0.05; // prawdopodobienstwo mutacji
 float pcross							= 0.77; // prawdopodobienstwo krzyzowania
 
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 	std::time_t start = clock();	/// pobranie czasu startu programu
 	srand((unsigned)time(0));		/// wymuszenie losowania roznych wartosci w rand()	
 
-	generate_blocks_file("plik.txt", 200);/// generowanie pliku z klockami
+	//generate_blocks_file("plik.txt", 300);/// generowanie pliku z klockami
 
 	read_blocks_file("plik.txt");
 
@@ -233,6 +233,9 @@ int main(int argc, char **argv)
 	/// rozwiazywanie problemu - serce algorytmu genetycznego
 	while(!ga.done())
 	{
+		std::time_t tmp_stop = clock();
+		if( (((float)(tmp_stop-start)/CLOCKS_PER_SEC)) > 110 )
+			break;
 
 	//////////////////////////////////////////////////////////////////////////
 		/// ta czesc sluzy do okreslenia jak wiele razy algorytm nie byl w stanie znalezc lepszego wyniku
@@ -476,11 +479,11 @@ float objective(GAGenome & c)
 //////////////////////////////////////////////////////////////////////////
 	/// obliczanie zmiennej result - wyniku zwracanego przez objective
 	/// - zastosowanie odpowiednich, eksperymentalnie dobranych wspó³czynników
-	float	wspolczynnik_szer = 30.5,
+	float	wspolczynnik_szer = 40.5,
 		wspolczynnik_wys  = 70.5;
 
 	if(amount_of_blocks <= 75)
-		wspolczynnik_szer = 50.0;
+		wspolczynnik_szer = 60.0;
 
 	if(amount_of_blocks > 150)
 		wspolczynnik_wys = 90.5;
