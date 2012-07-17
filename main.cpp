@@ -12,7 +12,6 @@
 #include <vector>
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <conio.h>
 #include <ga/ga.h>
 #include <cstdlib>
 #include <algorithm>
@@ -184,12 +183,19 @@ bool sortuj (const Block &,const Block &);
 /************************************************************************/
 int main(int argc, char **argv)
 {
+	if(argc < 3)
+	{
+		printf("Za malo argumentow... Program zostaje zamkniety.\n");
+		return -1;
+	}
+
+
 	std::time_t start = clock();	/// pobranie czasu startu programu
 	srand((unsigned)time(0));		/// wymuszenie losowania roznych wartosci w rand()	
 
 	//generate_blocks_file("plik.txt", 300);/// generowanie pliku z klockami
 
-	read_blocks_file("plik.txt");
+	read_blocks_file(argv[1]);
 
 //////////////////////////////////////////////////////////////////////////
 	/// osobnik
@@ -297,7 +303,7 @@ int main(int argc, char **argv)
 //////////////////////////////////////////////////////////////////////////
 	/// zapis najleszego osobnika do pliku
 	GA1DArrayGenome<Block>& best_of_all = (GA1DArrayGenome<Block> &)ga.statistics().bestIndividual();
-	write_blocks_file("out.txt", best_of_all/*(GA1DArrayGenome<Block> &)ga.statistics().bestPopulation().worst()*/);
+	write_blocks_file(argv[2], best_of_all/*(GA1DArrayGenome<Block> &)ga.statistics().bestPopulation().worst()*/);
 	std::cout << "\n" << maksymalna_szerokosc_osobnika(best_of_all) << "     " << best_of_all.score() <<" \n";
 //////////////////////////////////////////////////////////////////////////
 
@@ -307,7 +313,7 @@ int main(int argc, char **argv)
 	std::time_t stop = clock();
 	std::cout << "Program wykonal sie w :" << ((float)(stop-start)/CLOCKS_PER_SEC) << "[s]" << "\n";
 //////////////////////////////////////////////////////////////////////////
-	getch();
+
 	return 0;
 }
 
